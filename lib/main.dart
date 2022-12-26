@@ -25,7 +25,8 @@ class DataCRUD extends StatefulWidget {
 
 class _DataCRUDState extends State<DataCRUD> {
   late TextEditingController controller;
-  String name = '';
+  String name = "";
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -48,35 +49,50 @@ class _DataCRUDState extends State<DataCRUD> {
         title: Text(widget.title),
         actions: <Widget>[
           IconButton(
-              onPressed: () async {
-                // final name = controller.text;
-                final name = await inputUserData();
-                if (name == null || name.isEmpty) return;
-                setState(() {
-                  this.name = name;
-                });
+              onPressed: () {
+                inputUserData();
               },
               icon: const Icon(Icons.add)),
         ],
       ),
-      body: MemberDTO(name: this.name),
+      body: MemberDTO(name: name),
     );
   }
 
   Future<String?> inputUserData() => showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-            title: const Text('Your Name'),
-            content: TextField(
-              autofocus: true,
-              decoration: InputDecoration(hintText: 'Enter your name'),
-              controller: controller,
+        context: context,
+        builder: (context) => AlertDialog(
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  autofocus: true,
+                  decoration:
+                      const InputDecoration(hintText: 'Enter your name'),
+                  controller: controller,
+                  validator: (value) {
+                    return value!.isNotEmpty ? null : "Invalid Field";
+                  },
+                ),
+              ],
             ),
-            actions: [
-              TextButton(onPressed: submitOK, child: const Text('OK')),
-            ],
-      )
-  );
+          ),
+          actions: <Widget>[
+            TextButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      name = controller.text;
+                    });
+                  }
+                },
+                child: const Text('ADD DB')),
+          ],
+        ),
+      );
 
   void submitOK() {
     Navigator.of(context).pop(controller.text);
@@ -101,13 +117,16 @@ class MemberDTO extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Expanded(
-            child: Text(
-          'Name: $name',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
-        )),
+        Center(
+          child: Text(
+            'Name: $name',
+            style:
+            const TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+          ),
+        )
       ],
     );
   }
